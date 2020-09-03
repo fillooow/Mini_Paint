@@ -5,6 +5,7 @@ import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.graphics.Paint
 import android.graphics.Path
+import android.graphics.Rect
 import android.view.MotionEvent
 import android.view.MotionEvent.ACTION_DOWN
 import android.view.MotionEvent.ACTION_MOVE
@@ -29,6 +30,8 @@ class CustomCanvasView(context: Context) : View(context) {
     private var currentY = 0f
 
     private var path = Path()
+
+    private lateinit var frame: Rect
 
     private val drawColor = ResourcesCompat.getColor(resources, R.color.colorPaint, null)
 
@@ -63,11 +66,16 @@ class CustomCanvasView(context: Context) : View(context) {
         extraCanvas = Canvas(extraBitmap)
 
         extraCanvas.drawColor(backgroundColor)
+
+        val inset = 40
+        frame = Rect(inset, inset, width - inset, height - inset)
     }
 
     override fun onDraw(canvas: Canvas) {
         super.onDraw(canvas)
         canvas.drawBitmap(extraBitmap, 0f, 0f, null)
+
+        canvas.drawRect(frame, paint)
     }
 
     override fun onTouchEvent(event: MotionEvent): Boolean {
