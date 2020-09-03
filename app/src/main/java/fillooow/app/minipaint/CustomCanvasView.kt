@@ -4,6 +4,11 @@ import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.graphics.Paint
+import android.graphics.Path
+import android.view.MotionEvent
+import android.view.MotionEvent.ACTION_DOWN
+import android.view.MotionEvent.ACTION_MOVE
+import android.view.MotionEvent.ACTION_UP
 import android.view.View
 import androidx.core.content.res.ResourcesCompat
 
@@ -13,6 +18,12 @@ class CustomCanvasView(context: Context) : View(context) {
 
     private lateinit var extraCanvas: Canvas
     private lateinit var extraBitmap: Bitmap
+
+    // caching x and y coordinates of the current touch event (the [MotionEvent] coordinates)
+    private var motionTouchEventX = 0f
+    private var motionTouchEventY = 0f
+
+    private var path = Path()
 
     private val drawColor = ResourcesCompat.getColor(resources, R.color.colorPaint, null)
 
@@ -44,4 +55,25 @@ class CustomCanvasView(context: Context) : View(context) {
         super.onDraw(canvas)
         canvas.drawBitmap(extraBitmap, 0f, 0f, null)
     }
+
+    override fun onTouchEvent(event: MotionEvent): Boolean {
+
+        motionTouchEventX = event.x
+        motionTouchEventY = event.y
+
+        when (event.action) {
+
+            ACTION_DOWN -> touchStart()
+            ACTION_MOVE -> touchMove()
+            ACTION_UP -> touchUp()
+        }
+
+        return true
+    }
+
+    private fun touchStart() {}
+
+    private fun touchMove() {}
+
+    private fun touchUp() {}
 }
