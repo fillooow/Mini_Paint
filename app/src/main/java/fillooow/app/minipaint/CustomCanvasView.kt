@@ -10,7 +10,9 @@ import android.view.MotionEvent.ACTION_DOWN
 import android.view.MotionEvent.ACTION_MOVE
 import android.view.MotionEvent.ACTION_UP
 import android.view.View
+import android.view.ViewConfiguration
 import androidx.core.content.res.ResourcesCompat
+import kotlin.math.abs
 
 private const val STROKE_WIDTH = 12f
 
@@ -22,6 +24,9 @@ class CustomCanvasView(context: Context) : View(context) {
     // caching x and y coordinates of the current touch event (the [MotionEvent] coordinates)
     private var motionTouchEventX = 0f
     private var motionTouchEventY = 0f
+
+    private var currentX = 0f
+    private var currentY = 0f
 
     private var path = Path()
 
@@ -39,6 +44,15 @@ class CustomCanvasView(context: Context) : View(context) {
     }
 
     private val backgroundColor = ResourcesCompat.getColor(resources, R.color.colorBackground, null)
+
+    /**
+     * [touchTolerance] - минимальная дистанция движения пальца, после которой
+     * засчитываем перемещение и отрисовываем линию
+     *
+     * [scaledTouchSlop] - вернет дистанцию в пикселях, после которой система решит,
+     * что произошел евент (а не "шумовое" движение пальца)
+     */
+    private val touchTolerance = ViewConfiguration.get(context).scaledTouchSlop
 
     override fun onSizeChanged(w: Int, h: Int, oldw: Int, oldh: Int) {
         super.onSizeChanged(w, h, oldw, oldh)
@@ -71,9 +85,37 @@ class CustomCanvasView(context: Context) : View(context) {
         return true
     }
 
-    private fun touchStart() {}
+    private fun touchStart() {
 
-    private fun touchMove() {}
+        path.reset()
+        path.moveTo(motionTouchEventX, motionTouchEventY)
+        currentX = motionTouchEventX
+        currentY = motionTouchEventY
+    }
 
-    private fun touchUp() {}
+    private fun touchMove() {
+
+        val dx = abs(motionTouchEventX - currentX)
+        val dy = abs(motionTouchEventY - currentY)
+
+        if (dx >= touchTolerance || dy >= touchTolerance) {
+
+            /**
+             * [Path.quadTo] создает кривую Безье, начиная из последней точки,
+             * стремясь к точке x1,y2 и заканчивает ее в x2,y2
+             */
+            path.quadTo(currentX, currentY, (motionTouchEventX + currentX) / 2, (motionTouchEventY + currentY) / 2)
+            currentX = motionTouchEventX
+            currentY = motionTouchEventY
+
+            // draw the path in the extra bitmap to cache it
+            extraCanvas.drawPath(path, paint)
+        }
+        invalidate()
+    }
+
+    private fun touchUp() {
+
+        path.reset()
+    }
 }
